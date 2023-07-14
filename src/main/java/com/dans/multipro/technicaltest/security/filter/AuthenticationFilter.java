@@ -9,6 +9,7 @@ import com.dans.multipro.technicaltest.data.model.LoginRequest;
 import com.dans.multipro.technicaltest.data.model.LoginResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
+import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -57,12 +58,17 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         int tokenExpires = Integer.parseInt(configProperties.getConfigValue("app.jwt.tokenExpiration"));
         ObjectMapper mapper = objectMapperConfiguration.getObjectMapper();
 
+
         String token = JWT.create()
                 .withSubject(authResult.getName())
                 .withExpiresAt(new Date(System.currentTimeMillis() + tokenExpires * 1000))
                 .sign(Algorithm.HMAC256(secretKey));
 
-        LoginResponse loginResponse = new LoginResponse(token, "Bearer", tokenExpires);
+        LoginResponse loginResponse = LoginResponse.builder()
+                .accessToken(token)
+                .tokenExpireIn(tokenExpires)
+                .tokenType("Bearer")
+                .build();
 
         String json = mapper.writeValueAsString(loginResponse);
 
